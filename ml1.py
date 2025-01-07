@@ -1,34 +1,46 @@
-# Step 1: Import necessary libraries
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
-from sklearn.datasets import loadtxt
+from sklearn.preprocessing import StandardScaler
 
-# Step 2: Load your dataset
-data = pd.loadtxt('data_Kclusters.txt')  # Make sure this file is in the right location
+# Read the data
+data = np.loadtxt('data_Kclusters.txt')
 
-# Step 3: Use Elbow Method to find optimal K
-wcss = []  # List to hold WCSS values
-for k in range(1, 11):  # Try values of K from 1 to 10
-    kmeans = KMeans(n_clusters=k, init='k-means++', max_iter=300, n_init=10, random_state=42)
-    kmeans.fit(data)
-    wcss.append(kmeans.inertia_)  # inertia_ is the WCSS
+# Standardize the features
+scaler = StandardScaler()
+data_scaled = scaler.fit_transform(data)
 
-# Step 4: Plot the Elbow Curve
-plt.plot(range(1, 11), wcss)
-plt.title('Elbow Method')
-plt.xlabel('Number of Clusters')
-plt.ylabel('WCSS')
+# Calculate WCSS for different values of K
+wcss = []
+K_range = range(1, 11)
+
+for k in K_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(data_scaled)
+    wcss.append(kmeans.inertia_)
+
+# Plot the Elbow curve
+plt.figure(figsize=(10, 6))
+plt.plot(K_range, wcss, 'bx-')
+plt.xlabel('K Value')
+plt.ylabel('Within-Cluster Sum of Squares')
+plt.title('Elbow Method For Optimal K')
+plt.grid(True)
 plt.show()
 
-# Step 5: Choose the optimal K (for example, 6 clusters based on the elbow) and fit the KMeans model
-optimal_k = 6
-kmeans = KMeans(n_clusters=optimal_k, init='k-means++', max_iter=300, n_init=10, random_state=42)
-y_kmeans = kmeans.fit_predict(data)
+# Based on elbow method, let's use optimal K
+optimal_k = 3  # We'll determine this from the elbow plot
 
-# Step 6: Visualize the clusters (if data is 2D or can be projected to 2D)
-plt.scatter(data[:, 0], data[:, 1], c=y_kmeans, s=50, cmap='viridis')
-plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=200, c='red')
-plt.title(f'K-Means Clustering (k={optimal_k})')
+# Perform K-means clustering with optimal K
+kmeans_optimal = KMeans(n_clusters=optimal_k, random_state=42)
+clusters = kmeans_optimal.fit_predict(data_scaled)
+
+# Visualize the clusters
+plt.figure(figsize=(10, 6))
+plt.scatter(data[:, 0], data[:, 1], c=clusters, cmap='viridis')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title(f'K-means Clustering (K={optimal_k})')
+plt.colorbar(label='Cluster')
+plt.grid(True)
 plt.show()
